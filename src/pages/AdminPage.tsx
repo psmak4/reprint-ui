@@ -124,7 +124,7 @@ export function AdminPage() {
 
   const setRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      return admin.setRole({ userId, role });
+      return admin.setRole({ userId, role: role as 'user' | 'admin' });
     },
     onSuccess: () => refetchUsers(),
   });
@@ -319,7 +319,7 @@ export function AdminPage() {
 
             {usersData && usersData.users && usersData.users.length > 0 && (
               <div className="space-y-3">
-                {usersData.users.map((user: AdminUser) => (
+                {usersData.users.map((user: any) => (
                   <UserCard
                     key={user.id}
                     user={user}
