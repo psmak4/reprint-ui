@@ -1,17 +1,10 @@
 // User types
 export interface User {
   id: string;
+  name: string;
   email: string;
   username: string;
   role: 'user' | 'admin';
-}
-
-export interface AuthResponse {
-  success: boolean;
-  data: {
-    user: User;
-    token: string;
-  };
 }
 
 // Book types

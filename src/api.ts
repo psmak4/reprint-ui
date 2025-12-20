@@ -1,25 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 class ApiClient {
-  private token: string | null = null;
-
-  constructor() {
-    this.token = localStorage.getItem('token');
-  }
-
-  setToken(token: string | null) {
-    this.token = token;
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('token');
-    }
-  }
-
-  getToken() {
-    return this.token;
-  }
-
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -29,13 +10,10 @@ class ApiClient {
       ...options.headers,
     };
 
-    if (this.token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
-    }
-
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
+      credentials: 'include', // Include cookies for Better Auth session
     });
 
     const data = await response.json();
@@ -45,31 +23,6 @@ class ApiClient {
     }
 
     return data;
-  }
-
-  // Auth
-  async register(email: string, username: string, password: string) {
-    return this.request<{ success: boolean; data: { user: import('./types').User; token: string } }>(
-      '/auth/register',
-      {
-        method: 'POST',
-        body: JSON.stringify({ email, username, password }),
-      }
-    );
-  }
-
-  async login(email: string, password: string) {
-    return this.request<{ success: boolean; data: { user: import('./types').User; token: string } }>(
-      '/auth/login',
-      {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      }
-    );
-  }
-
-  async getMe() {
-    return this.request<{ success: boolean; data: { user: import('./types').User } }>('/auth/me');
   }
 
   // Books

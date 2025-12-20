@@ -2,17 +2,64 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { admin } from '../lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { StarRating } from '../components/StarRating';
-import { Image, CheckCircle, XCircle, AlertCircle, Users, MessageSquare } from 'lucide-react';
+import { 
+  Image, 
+  CheckCircle, 
+  XCircle, 
+  AlertCircle, 
+  Users, 
+  MessageSquare, 
+  Search,
+  Ban,
+  Shield,
+  ShieldOff,
+  Trash2,
+  UserX,
+  UserCheck,
+} from 'lucide-react';
 import type { Review } from '../types';
 
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  role: string;
+  banned: boolean | null;
+  banReason: string | null;
+  createdAt: string;
+}
+
 export function AdminPage() {
+  const [activeSection, setActiveSection] = useState<'reviews' | 'users'>('reviews');
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [userSearch, setUserSearch] = useState('');
   const queryClient = useQueryClient();
 
   const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -23,6 +70,25 @@ export function AdminPage() {
   const { data: reviewsData, isLoading: reviewsLoading } = useQuery({
     queryKey: ['adminReviews', activeTab],
     queryFn: () => api.getAdminReviews({ status: activeTab, limit: 50 }),
+  });
+
+  // Users query using Better Auth admin
+  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery({
+    queryKey: ['adminUsers', userSearch],
+    queryFn: async () => {
+      const result = await admin.listUsers({
+        query: {
+          limit: 100,
+          ...(userSearch && {
+            searchValue: userSearch,
+            searchField: 'email' as const,
+            searchOperator: 'contains' as const,
+          }),
+        },
+      });
+      return result.data;
+    },
+    enabled: activeSection === 'users',
   });
 
   const approveMutation = useMutation({
@@ -41,13 +107,48 @@ export function AdminPage() {
     },
   });
 
+  // User management mutations
+  const banUserMutation = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason?: string }) => {
+      return admin.banUser({ userId, banReason: reason });
+    },
+    onSuccess: () => refetchUsers(),
+  });
+
+  const unbanUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return admin.unbanUser({ userId });
+    },
+    onSuccess: () => refetchUsers(),
+  });
+
+  const setRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      return admin.setRole({ userId, role });
+    },
+    onSuccess: () => refetchUsers(),
+  });
+
+  const removeUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return admin.removeUser({ userId });
+    },
+    onSuccess: () => {
+      refetchUsers();
+      queryClient.invalidateQueries({ queryKey: ['adminStats'] });
+    },
+  });
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-colors ${activeSection === 'reviews' ? 'ring-2 ring-primary' : ''}`}
+          onClick={() => setActiveSection('reviews')}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Pending Reviews
@@ -67,7 +168,10 @@ export function AdminPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-colors ${activeSection === 'users' ? 'ring-2 ring-primary' : ''}`}
+          onClick={() => setActiveSection('users')}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Users
@@ -109,69 +213,280 @@ export function AdminPage() {
       </div>
 
       {/* Reviews Moderation */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Review Moderation</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="pending" className="gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Pending
-                {statsData && statsData.data.pendingReviews > 0 && (
-                  <Badge variant="secondary" className="ml-1">
-                    {statsData.data.pendingReviews}
-                  </Badge>
+      {activeSection === 'reviews' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Review Moderation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+              <TabsList className="mb-4">
+                <TabsTrigger value="pending" className="gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Pending
+                  {statsData && statsData.data.pendingReviews > 0 && (
+                    <Badge variant="secondary" className="ml-1">
+                      {statsData.data.pendingReviews}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="approved" className="gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  Approved
+                </TabsTrigger>
+                <TabsTrigger value="rejected" className="gap-2">
+                  <XCircle className="h-4 w-4" />
+                  Rejected
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value={activeTab}>
+                {reviewsLoading && (
+                  <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="p-4 border rounded-lg space-y-3">
+                        <Skeleton className="h-5 w-1/2" />
+                        <Skeleton className="h-16 w-full" />
+                      </div>
+                    ))}
+                  </div>
                 )}
-              </TabsTrigger>
-              <TabsTrigger value="approved" className="gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Approved
-              </TabsTrigger>
-              <TabsTrigger value="rejected" className="gap-2">
-                <XCircle className="h-4 w-4" />
-                Rejected
-              </TabsTrigger>
-            </TabsList>
 
-            <TabsContent value={activeTab}>
-              {reviewsLoading && (
-                <div className="space-y-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="p-4 border rounded-lg space-y-3">
-                      <Skeleton className="h-5 w-1/2" />
-                      <Skeleton className="h-16 w-full" />
+                {reviewsData && reviewsData.data.reviews.length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>No {activeTab} reviews</p>
+                  </div>
+                )}
+
+                {reviewsData && reviewsData.data.reviews.length > 0 && (
+                  <div className="space-y-4">
+                    {reviewsData.data.reviews.map((review: Review) => (
+                      <AdminReviewCard
+                        key={review.id}
+                        review={review}
+                        onApprove={() => approveMutation.mutate(review.id)}
+                        onReject={() => rejectMutation.mutate(review.id)}
+                        isApproving={approveMutation.isPending}
+                        isRejecting={rejectMutation.isPending}
+                        showActions={activeTab === 'pending'}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* User Management */}
+      {activeSection === 'users' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>User Management</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users by email..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {usersLoading && (
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="p-4 border rounded-lg flex items-center gap-4">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-1/3" />
+                      <Skeleton className="h-3 w-1/2" />
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
+            )}
 
-              {reviewsData && reviewsData.data.reviews.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>No {activeTab} reviews</p>
-                </div>
-              )}
+            {usersData && usersData.users && usersData.users.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>No users found</p>
+              </div>
+            )}
 
-              {reviewsData && reviewsData.data.reviews.length > 0 && (
-                <div className="space-y-4">
-                  {reviewsData.data.reviews.map((review: Review) => (
-                    <AdminReviewCard
-                      key={review.id}
-                      review={review}
-                      onApprove={() => approveMutation.mutate(review.id)}
-                      onReject={() => rejectMutation.mutate(review.id)}
-                      isApproving={approveMutation.isPending}
-                      isRejecting={rejectMutation.isPending}
-                      showActions={activeTab === 'pending'}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            {usersData && usersData.users && usersData.users.length > 0 && (
+              <div className="space-y-3">
+                {usersData.users.map((user: AdminUser) => (
+                  <UserCard
+                    key={user.id}
+                    user={user}
+                    onBan={(reason) => banUserMutation.mutate({ userId: user.id, reason })}
+                    onUnban={() => unbanUserMutation.mutate(user.id)}
+                    onSetRole={(role) => setRoleMutation.mutate({ userId: user.id, role })}
+                    onRemove={() => removeUserMutation.mutate(user.id)}
+                    isLoading={
+                      banUserMutation.isPending || 
+                      unbanUserMutation.isPending || 
+                      setRoleMutation.isPending ||
+                      removeUserMutation.isPending
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function UserCard({
+  user,
+  onBan,
+  onUnban,
+  onSetRole,
+  onRemove,
+  isLoading,
+}: {
+  user: AdminUser;
+  onBan: (reason?: string) => void;
+  onUnban: () => void;
+  onSetRole: (role: string) => void;
+  onRemove: () => void;
+  isLoading: boolean;
+}) {
+  return (
+    <div className="p-4 border rounded-lg flex items-center gap-4">
+      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+        {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium truncate">{user.name || user.username}</span>
+          {user.role === 'admin' && (
+            <Badge variant="default" className="gap-1">
+              <Shield className="h-3 w-3" />
+              Admin
+            </Badge>
+          )}
+          {user.banned && (
+            <Badge variant="destructive" className="gap-1">
+              <Ban className="h-3 w-3" />
+              Banned
+            </Badge>
+          )}
+        </div>
+        <div className="text-sm text-muted-foreground truncate">
+          {user.email} · @{user.username}
+        </div>
+        {user.banned && user.banReason && (
+          <div className="text-xs text-destructive mt-1">
+            Reason: {user.banReason}
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        {/* Role selector */}
+        <Select
+          value={user.role}
+          onValueChange={onSetRole}
+          disabled={isLoading}
+        >
+          <SelectTrigger className="w-[110px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="user">
+              <span className="flex items-center gap-2">
+                <ShieldOff className="h-3 w-3" />
+                User
+              </span>
+            </SelectItem>
+            <SelectItem value="admin">
+              <span className="flex items-center gap-2">
+                <Shield className="h-3 w-3" />
+                Admin
+              </span>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Ban/Unban button */}
+        {user.banned ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onUnban}
+            disabled={isLoading}
+          >
+            <UserCheck className="h-4 w-4 mr-1" />
+            Unban
+          </Button>
+        ) : (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isLoading}
+              >
+                <UserX className="h-4 w-4 mr-1" />
+                Ban
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Ban User</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to ban {user.name || user.email}? 
+                  They will be logged out and unable to sign in.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onBan('Violated community guidelines')}>
+                  Ban User
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {/* Delete button */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={isLoading}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete User</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the user 
+                account for {user.name || user.email} and all associated data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={onRemove}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete User
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }

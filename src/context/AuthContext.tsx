@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { api } from '../api';
+import { createContext, useContext, type ReactNode } from 'react';
+import { useSession, signIn, signUp, signOut } from '../lib/auth-client';
 import type { User } from '../types';
 
 interface AuthContextType {
@@ -9,48 +9,46 @@ interface AuthContextType {
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: session, isPending: isLoading } = useSession();
 
-  useEffect(() => {
-    const token = api.getToken();
-    if (token) {
-      api.getMe()
-        .then((res) => {
-          setUser(res.data.user);
-        })
-        .catch(() => {
-          api.setToken(null);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
+  const user: User | null = session?.user ? {
+    id: session.user.id,
+    name: session.user.name,
+    email: session.user.email,
+    username: (session.user as unknown as { username: string }).username,
+    role: (session.user as unknown as { role: 'user' | 'admin' }).role,
+  } : null;
 
   const login = async (email: string, password: string) => {
-    const res = await api.login(email, password);
-    api.setToken(res.data.token);
-    setUser(res.data.user);
+    const result = await signIn.email({
+      email,
+      password,
+    });
+    if (result.error) {
+      throw new Error(result.error.message || 'Login failed');
+    }
   };
 
   const register = async (email: string, username: string, password: string) => {
-    const res = await api.register(email, username, password);
-    api.setToken(res.data.token);
-    setUser(res.data.user);
+    const result = await signUp.email({
+      email,
+      password,
+      name: username, // Use username as the display name
+      username, // Custom field
+    } as Parameters<typeof signUp.email>[0]);
+    if (result.error) {
+      throw new Error(result.error.message || 'Registration failed');
+    }
   };
 
-  const logout = () => {
-    api.setToken(null);
-    setUser(null);
+  const logout = async () => {
+    await signOut();
   };
 
   return (
