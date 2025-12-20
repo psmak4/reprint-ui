@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Library, ArrowRight, Bookmark, PenLine } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import { TrendingBooks } from '../components/TrendingBooks';
+import { useAuth } from '@/hooks/use-auth';
 
 export function HomePage() {
   const { isAuthenticated } = useAuth();
@@ -81,7 +81,7 @@ export function HomePage() {
         <div className="max-w-5xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-4">
             {/* Large feature card */}
-            <div className="md:row-span-2 p-8 rounded-2xl border border-border bg-card flex flex-col justify-between min-h-[320px]">
+            <div className="md:row-span-2 p-8 rounded-2xl border border-border bg-card flex flex-col justify-between min-h-80">
               <div>
                 <span className="text-xs font-medium uppercase tracking-wider text-primary">Discover</span>
                 <h3 className="text-2xl font-bold mt-2 mb-3">Millions of books at your fingertips</h3>
@@ -94,7 +94,7 @@ export function HomePage() {
 
             {/* Smaller feature cards */}
             <div className="p-6 rounded-2xl border border-border bg-card flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 <Bookmark className="h-6 w-6 text-primary" />
               </div>
               <div>
@@ -106,7 +106,7 @@ export function HomePage() {
             </div>
 
             <div className="p-6 rounded-2xl border border-border bg-card flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 <PenLine className="h-6 w-6 text-primary" />
               </div>
               <div>

@@ -69,7 +69,7 @@ export function SearchPage() {
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="flex gap-4 p-4 rounded-lg">
-              <Skeleton className="w-24 h-36 flex-shrink-0 rounded-md" />
+              <Skeleton className="w-24 h-36 shrink-0 rounded-md" />
               <div className="flex-1 space-y-3 py-2">
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />

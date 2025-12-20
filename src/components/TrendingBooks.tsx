@@ -20,9 +20,9 @@ function BookCard({ book }: { book: TrendingBook }) {
   return (
     <Link 
       to={`/book/${normalizedKey}`}
-      className="group flex-shrink-0 w-[140px] md:w-[160px]"
+      className="group shrink-0 w-35 md:w-40"
     >
-      <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted mb-2 shadow-md group-hover:shadow-xl transition-shadow">
+      <div className="relative aspect-2/3 rounded-lg overflow-hidden bg-muted mb-2 shadow-md group-hover:shadow-xl transition-shadow">
         {book.coverUrl ? (
           <img
             src={book.coverUrl}
@@ -30,7 +30,7 @@ function BookCard({ book }: { book: TrendingBook }) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5 text-primary/50">
+          <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-primary/20 to-primary/5 text-primary/50">
             <span className="text-4xl font-bold">{book.title.charAt(0)}</span>
           </div>
         )}
@@ -51,8 +51,8 @@ function BookCard({ book }: { book: TrendingBook }) {
 
 function BookCardSkeleton() {
   return (
-    <div className="flex-shrink-0 w-[140px] md:w-[160px]">
-      <Skeleton className="aspect-[2/3] rounded-lg mb-2" />
+    <div className="shrink-0 w-35 md:w-40">
+      <Skeleton className="aspect-2/3 rounded-lg mb-2" />
       <Skeleton className="h-4 w-full mb-1" />
       <Skeleton className="h-3 w-2/3" />
     </div>

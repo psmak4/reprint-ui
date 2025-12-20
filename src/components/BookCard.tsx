@@ -11,7 +11,7 @@ export function BookCard({ book }: BookCardProps) {
     <Link to={`/book${book.workKey}`} className="group block">
       <div className="flex gap-4 p-4 rounded-lg hover:bg-card transition-colors">
         {/* Cover Image */}
-        <div className="flex-shrink-0 w-24 h-36 bg-muted rounded-md overflow-hidden shadow-md group-hover:shadow-lg transition-shadow">
+        <div className="shrink-0 w-24 h-36 bg-muted rounded-md overflow-hidden shadow-md group-hover:shadow-lg transition-shadow">
           {book.coverUrl ? (
             <img
               src={book.coverUrl}

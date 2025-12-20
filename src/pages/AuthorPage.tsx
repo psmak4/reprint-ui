@@ -31,7 +31,7 @@ export function AuthorPage() {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
-          <div className="md:w-64 flex-shrink-0">
+          <div className="md:w-64 shrink-0">
             <Skeleton className="w-full aspect-square rounded-lg" />
           </div>
           <div className="flex-1 space-y-4">
@@ -73,7 +73,7 @@ export function AuthorPage() {
       {/* Author Header */}
       <div className="flex flex-col md:flex-row gap-8 mb-8">
         {/* Author Photo */}
-        <div className="md:w-64 flex-shrink-0">
+        <div className="md:w-64 shrink-0">
           <div className="w-full aspect-square bg-muted rounded-lg overflow-hidden shadow-lg">
             {author.photoUrl ? (
               <img
@@ -82,7 +82,7 @@ export function AuthorPage() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-gradient-to-br from-muted to-muted/50">
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-linear-to-br from-muted to-muted/50">
                 <User className="h-24 w-24" />
               </div>
             )}
@@ -95,7 +95,7 @@ export function AuthorPage() {
               {author.wikipedia && (
                 <Button variant="outline" className="w-full justify-start overflow-hidden" asChild>
                   <a href={author.wikipedia} target="_blank" rel="noopener noreferrer" title="Wikipedia">
-                    <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <ExternalLink className="h-4 w-4 mr-2 shrink-0" />
                     <span className="truncate">Wikipedia</span>
                   </a>
                 </Button>
@@ -103,7 +103,7 @@ export function AuthorPage() {
               {author.links.slice(0, 3).map((link, i) => (
                 <Button key={i} variant="outline" className="w-full justify-start overflow-hidden" asChild>
                   <a href={link.url} target="_blank" rel="noopener noreferrer" title={link.title}>
-                    <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <ExternalLink className="h-4 w-4 mr-2 shrink-0" />
                     <span className="truncate">{link.title}</span>
                   </a>
                 </Button>
@@ -190,7 +190,7 @@ export function AuthorPage() {
                 >
                   <div className="flex gap-4 p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/30 transition-colors">
                     {/* Cover */}
-                    <div className="w-16 h-24 flex-shrink-0 bg-muted rounded overflow-hidden">
+                    <div className="w-16 h-24 shrink-0 bg-muted rounded overflow-hidden">
                       {work.coverUrl ? (
                         <img
                           src={work.coverUrl}

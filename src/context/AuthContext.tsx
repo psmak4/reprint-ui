@@ -1,18 +1,7 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useSession, signIn, signUp, signOut } from '../lib/auth-client';
 import type { User } from '../types';
-
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from '@/hooks/use-auth';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: session, isPending: isLoading } = useSession();
@@ -68,10 +57,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}

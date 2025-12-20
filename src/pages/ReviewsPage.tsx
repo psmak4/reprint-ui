@@ -50,7 +50,7 @@ export function ReviewsPage() {
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="p-4 border rounded-lg space-y-3">
               <div className="flex gap-4">
-                <Skeleton className="w-12 h-18 flex-shrink-0" />
+                <Skeleton className="w-12 h-18 shrink-0" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-5 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
@@ -112,7 +112,7 @@ function ReviewCard({
       <CardContent className="p-4">
         <div className="flex gap-4 mb-4">
           {/* Book Cover */}
-          <Link to={`/book${review.workKey}`} className="flex-shrink-0">
+          <Link to={`/book${review.workKey}`} className="shrink-0">
             <div className="w-12 h-18 bg-muted rounded overflow-hidden">
               {coverUrl ? (
                 <img

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api';
-import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -50,6 +49,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import type { LibraryStatus, ReviewWithUser, RatingBreakdown } from '../types';
+import { useAuth } from '@/hooks/use-auth';
 
 const statusConfig = {
   want_to_read: { label: 'Want to Read', icon: BookMarked, color: 'bg-emerald-600 hover:bg-emerald-700' },
@@ -166,8 +166,8 @@ export function BookDetailPage() {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          <div className="lg:w-64 flex-shrink-0">
-            <Skeleton className="w-full aspect-[2/3] rounded-lg" />
+          <div className="lg:w-64 shrink-0">
+            <Skeleton className="w-full aspect-2/3 rounded-lg" />
             <Skeleton className="h-12 w-full mt-4" />
           </div>
           <div className="flex-1 space-y-4">
@@ -202,9 +202,9 @@ export function BookDetailPage() {
       {/* Main Book Info Section */}
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left Column - Cover & Actions */}
-        <div className="lg:w-64 flex-shrink-0">
+        <div className="lg:w-64 shrink-0">
           {/* Cover Image */}
-          <div className="w-full aspect-[2/3] bg-muted rounded-lg overflow-hidden shadow-lg">
+          <div className="w-full aspect-2/3 bg-muted rounded-lg overflow-hidden shadow-lg">
             {book.coverUrl ? (
               <img
                 src={book.coverUrl}
@@ -329,7 +329,7 @@ export function BookDetailPage() {
               {book.links.slice(0, 5).map((link, i) => (
                 <Button key={i} variant="outline" className="w-full justify-start overflow-hidden" asChild>
                   <a href={link.url} target="_blank" rel="noopener noreferrer" title={link.title}>
-                    <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <ExternalLink className="h-4 w-4 mr-2 shrink-0" />
                     <span className="truncate">{link.title}</span>
                   </a>
                 </Button>
@@ -543,9 +543,9 @@ export function BookDetailPage() {
                       const percentage = reviewCount > 0 ? Math.round((count / reviewCount) * 100) : 0;
                       return (
                         <div key={stars} className="flex items-center gap-2">
-                          <span className="text-sm w-12 flex-shrink-0">{stars} stars</span>
+                          <span className="text-sm w-12 shrink-0">{stars} stars</span>
                           <Progress value={percentage} className="h-2 flex-1 min-w-0" />
-                          <span className="text-sm text-muted-foreground w-24 text-right whitespace-nowrap flex-shrink-0">
+                          <span className="text-sm text-muted-foreground w-24 text-right whitespace-nowrap shrink-0">
                             {count} ({percentage}%)
                           </span>
                         </div>
@@ -589,9 +589,9 @@ export function BookDetailPage() {
                         : 0;
                       return (
                         <div key={stars} className="flex items-center gap-2">
-                          <span className="text-sm w-12 flex-shrink-0">{stars} stars</span>
+                          <span className="text-sm w-12 shrink-0">{stars} stars</span>
                           <Progress value={percentage} className="h-2 flex-1 min-w-0" />
-                          <span className="text-sm text-muted-foreground w-24 text-right whitespace-nowrap flex-shrink-0">
+                          <span className="text-sm text-muted-foreground w-24 text-right whitespace-nowrap shrink-0">
                             {count.toLocaleString()} ({percentage}%)
                           </span>
                         </div>
