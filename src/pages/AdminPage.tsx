@@ -319,7 +319,7 @@ export function AdminPage() {
 
             {usersData && usersData.users && usersData.users.length > 0 && (
               <div className="space-y-3">
-                {usersData.users.map((user: any) => (
+                {(usersData.users as AdminUser[]).map((user: AdminUser) => (
                   <UserCard
                     key={user.id}
                     user={user}
@@ -396,7 +396,7 @@ function UserCard({
           onValueChange={onSetRole}
           disabled={isLoading}
         >
-          <SelectTrigger className="w-[110px]">
+          <SelectTrigger className="w-27.5">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -517,7 +517,7 @@ function AdminReviewCard({
     <div className="p-4 border rounded-lg">
       {/* Header */}
       <div className="flex gap-4 mb-3">
-        <Link to={`/book${review.workKey}`} className="flex-shrink-0">
+        <Link to={`/book${review.workKey}`} className="shrink-0">
           <div className="w-10 h-14 bg-muted rounded overflow-hidden">
             {coverUrl ? (
               <img

@@ -105,7 +105,7 @@ export function LibraryPage() {
             <div className="space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="flex gap-4 p-4 border rounded-lg">
-                  <Skeleton className="w-16 h-24 flex-shrink-0" />
+                  <Skeleton className="w-16 h-24 shrink-0" />
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-5 w-3/4" />
                     <Skeleton className="h-4 w-1/2" />
@@ -169,7 +169,7 @@ function LibraryItemCard({
       <CardContent className="p-4">
         <div className="flex gap-4">
           {/* Cover */}
-          <Link to={`/book${item.workKey}`} className="flex-shrink-0">
+          <Link to={`/book${item.workKey}`} className="shrink-0">
             <div className="w-16 h-24 bg-muted rounded overflow-hidden">
               {coverUrl ? (
                 <img
