@@ -1,5 +1,4 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { BookOpen, Home, Search, Library, User, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 export function Layout() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
