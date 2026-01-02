@@ -3,10 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Library, ArrowRight, Bookmark, PenLine } from 'lucide-react';
-import { TrendingBooks } from '../components/TrendingBooks';
+import { NytBestSellers } from '../components/NytBestSellers';
 import { useAuth } from '@/hooks/use-auth';
+import { useTitle } from '@/hooks/use-title';
 
 export function HomePage() {
+  useTitle('Home');
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,10 +71,10 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Trending Books Section */}
+      {/* NYT Best Sellers Section */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-6xl mx-auto px-4">
-          <TrendingBooks />
+          <NytBestSellers />
         </div>
       </section>
 

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { useTitle } from '@/hooks/use-title';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -28,6 +28,7 @@ import { Image, Trash2, Library, ArrowUp, ArrowDown } from 'lucide-react';
 import type { LibraryStatus, LibraryItem } from '../types';
 
 export function LibraryPage() {
+  useTitle('My Library');
   const [activeTab, setActiveTab] = useState<LibraryStatus | 'all'>('all');
   const [sortBy, setSortBy] = useState<'title' | 'createdAt'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -45,17 +46,23 @@ export function LibraryPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: LibraryStatus }) =>
+    mutationFn: ({ id, status, workKey: _workKey }: { id: string; status: LibraryStatus; workKey: string }) =>
       api.updateLibraryItem(id, status),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['library'] });
+      // Also invalidate the specific book details if it's in the cache
+      const normalizedKey = variables.workKey.replace('/works/', '').replace(/^\//, '');
+      queryClient.invalidateQueries({ queryKey: ['book', normalizedKey] });
     },
   });
 
   const removeMutation = useMutation({
-    mutationFn: (id: string) => api.removeFromLibrary(id),
-    onSuccess: () => {
+    mutationFn: ({ id, workKey: _workKey }: { id: string; workKey: string }) => api.removeFromLibrary(id),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['library'] });
+      // Also invalidate the specific book details if it's in the cache
+      const normalizedKey = variables.workKey.replace('/works/', '').replace(/^\//, '');
+      queryClient.invalidateQueries({ queryKey: ['book', normalizedKey] });
     },
   });
 
@@ -132,14 +139,14 @@ export function LibraryPage() {
           )}
 
           {data && data.data.items.length > 0 && (
-            <div className="space-y-4">
+            <div className="divide-y divide-border -mx-4 px-4">
               {data.data.items.map((item) => (
                 <LibraryItemCard
                   key={item.id}
                   item={item}
                   coverUrl={getCoverUrl(item.coverId)}
-                  onStatusChange={(status) => updateMutation.mutate({ id: item.id, status })}
-                  onRemove={() => removeMutation.mutate(item.id)}
+                  onStatusChange={(status) => updateMutation.mutate({ id: item.id, status, workKey: item.workKey })}
+                  onRemove={() => removeMutation.mutate({ id: item.id, workKey: item.workKey })}
                   isUpdating={updateMutation.isPending}
                 />
               ))}
@@ -165,52 +172,50 @@ function LibraryItemCard({
   isUpdating: boolean;
 }) {
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex gap-4">
-          {/* Cover */}
-          <Link to={`/book${item.workKey}`} className="shrink-0">
-            <div className="w-16 h-24 bg-muted rounded overflow-hidden">
-              {coverUrl ? (
-                <img
-                  src={coverUrl}
-                  alt={item.title}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  <Image className="h-6 w-6" />
-                </div>
-              )}
-            </div>
-          </Link>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <Link to={`/book${item.workKey}`}>
-              <h3 className="font-semibold hover:text-primary transition-colors line-clamp-1">
-                {item.title}
-              </h3>
-            </Link>
-            {item.authorName && (
-              <p className="text-sm text-muted-foreground line-clamp-1">
-                by {item.authorName}
-              </p>
+    <div className="group relative">
+      <div className="flex gap-4 p-4 rounded-lg hover:bg-card transition-colors">
+        {/* Cover Image */}
+        <Link to={`/book${item.workKey}`} className="shrink-0">
+          <div className="w-24 h-36 bg-muted rounded-md overflow-hidden shadow-md group-hover:shadow-lg transition-shadow">
+            {coverUrl ? (
+              <img
+                src={coverUrl}
+                alt={item.title}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-secondary">
+                <Image className="h-10 w-10" />
+              </div>
             )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Added {new Date(item.createdAt).toLocaleDateString()}
+          </div>
+        </Link>
+
+        {/* Book Info */}
+        <div className="flex-1 min-w-0 py-1">
+          <Link to={`/book${item.workKey}`} className="block group/title">
+            <h3 className="font-semibold text-lg text-foreground line-clamp-2 group-hover/title:text-primary transition-colors">
+              {item.title}
+            </h3>
+          </Link>
+          {item.authorName && (
+            <p className="text-sm text-muted-foreground mt-1">
+              by <span className="text-foreground/80">{item.authorName}</span>
             </p>
+          )}
+          <div className="mt-2 text-xs text-muted-foreground space-y-0.5">
+            <p>Added {new Date(item.createdAt).toLocaleDateString()}</p>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2">
+          {/* Actions - Bottom of info on small, or right side on larger */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <Select
               value={item.status}
               onValueChange={onStatusChange}
               disabled={isUpdating}
             >
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-40 h-9 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -221,7 +226,7 @@ function LibraryItemCard({
             </Select>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="icon">
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive transition-colors">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>
@@ -240,7 +245,7 @@ function LibraryItemCard({
             </AlertDialog>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

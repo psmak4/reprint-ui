@@ -32,7 +32,7 @@ class ApiClient {
     );
   }
 
-  async getBookDetails(workKey: string) {
+  async getBookDetails(workKey: string, isbn?: string) {
     // Strip /works/ prefix and any leading slashes
     let key = workKey;
     if (key.startsWith('/works/')) {
@@ -40,7 +40,8 @@ class ApiClient {
     } else if (key.startsWith('/')) {
       key = key.slice(1);
     }
-    return this.request<import('./types').BookDetailsResponse>(`/books/${key}`);
+    const url = isbn ? `/books/${key}?isbn=${isbn}` : `/books/${key}`;
+    return this.request<import('./types').BookDetailsResponse>(url);
   }
 
   // Authors
@@ -51,10 +52,16 @@ class ApiClient {
   }
 
   // Trending
-  async getTrendingBooks(period: import('./types').TrendingPeriod = 'daily', limit = 20) {
-    return this.request<import('./types').TrendingBooksResponse>(
-      `/trending?period=${period}&limit=${limit}`
-    );
+  async getNytBestSellers(list = 'hardcover-fiction') {
+    return this.request<{
+      success: boolean;
+      data: {
+        source: string;
+        list: string;
+        books: import('./types').TrendingBook[];
+        count: number;
+      };
+    }>(`/trending/nytimes?list=${list}`);
   }
 
   // Library

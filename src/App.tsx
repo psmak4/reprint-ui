@@ -12,6 +12,7 @@ import { AuthorPage } from './pages/AuthorPage';
 import { LibraryPage } from './pages/LibraryPage';
 import { ReviewsPage } from './pages/ReviewsPage';
 import { AdminPage } from './pages/AdminPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { Toaster } from '@/components/ui/sonner';
 
 const queryClient = new QueryClient({
@@ -49,6 +50,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ReviewsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
                   </ProtectedRoute>
                 }
               />

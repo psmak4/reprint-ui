@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { admin } from '../lib/auth-client';
+import { useTitle } from '@/hooks/use-title';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +58,7 @@ interface AdminUser {
 }
 
 export function AdminPage() {
+  useTitle('Admin Dashboard');
   const [activeSection, setActiveSection] = useState<'reviews' | 'users'>('reviews');
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [userSearch, setUserSearch] = useState('');

@@ -7,12 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BookCard } from '../components/BookCard';
 import { Search, BookOpen } from 'lucide-react';
+import { useTitle } from '@/hooks/use-title';
 
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [inputValue, setInputValue] = useState(searchParams.get('q') || '');
   
   const query = searchParams.get('q') || '';
+  useTitle(query ? `Search: ${query}` : 'Search');
   const page = parseInt(searchParams.get('page') || '1', 10);
 
   const { data, isLoading, error } = useQuery({

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api';
+import { useTitle } from '@/hooks/use-title';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
@@ -26,6 +27,8 @@ export function AuthorPage() {
     queryKey: ['author', authorKey],
     queryFn: () => api.getAuthorDetails(authorKey),
   });
+
+  useTitle(data?.data?.author?.name);
 
   if (isLoading) {
     return (

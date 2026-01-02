@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { useTitle } from '@/hooks/use-title';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,7 @@ const statusVariants: Record<string, 'default' | 'secondary' | 'destructive'> = 
 };
 
 export function ReviewsPage() {
+  useTitle('My Reviews');
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({

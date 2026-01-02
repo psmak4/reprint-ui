@@ -1,10 +1,13 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSession, signIn, signUp, signOut } from '../lib/auth-client';
 import type { User } from '../types';
 import { AuthContext } from '@/hooks/use-auth';
+import { api } from '../api';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: session, isPending: isLoading } = useSession();
+  const queryClient = useQueryClient();
 
   const user: User | null = session?.user ? {
     id: session.user.id,
@@ -13,6 +16,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     username: (session.user as unknown as { username: string }).username,
     role: (session.user as unknown as { role: 'user' | 'admin' }).role,
   } : null;
+
+  const isAuthenticated = !!user;
+
+  // Prefetch library data when user logs in
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Prefetch the default library view to make page transition instant
+      queryClient.prefetchQuery({
+        queryKey: ['library', 'all', 'createdAt', 'desc'],
+        queryFn: () =>
+          api.getLibrary({
+            status: undefined,
+            sortBy: 'createdAt',
+            sortOrder: 'desc',
+            limit: 100,
+          }),
+      });
+    }
+  }, [isAuthenticated, queryClient]);
 
   const login = async (email: string, password: string) => {
     const result = await signIn.email({
@@ -38,6 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await signOut();
+    // Clear all queries from the cache to prevent data leakage and ensure fresh state
+    queryClient.clear();
   };
 
   return (
@@ -45,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isLoading,
-        isAuthenticated: !!user,
+        isAuthenticated,
         isAdmin: user?.role === 'admin',
         login,
         register,

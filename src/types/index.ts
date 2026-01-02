@@ -180,6 +180,7 @@ export interface TrendingBook {
   coverUrl?: string | null;
   firstPublishYear?: number;
   editionCount?: number;
+  isbn?: string;
 }
 
 export interface TrendingBooksResponse {

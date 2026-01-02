@@ -47,24 +47,6 @@ export function Layout() {
                 <Search className="h-4 w-4" />
                 Search
               </Link>
-              {isAuthenticated && (
-                <Link
-                  to="/library"
-                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Library className="h-4 w-4" />
-                  My Library
-                </Link>
-              )}
-              {isAdmin && (
-                <Link
-                  to="/admin"
-                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Settings className="h-4 w-4" />
-                  Admin
-                </Link>
-              )}
             </nav>
 
             {/* User Menu */}
@@ -101,6 +83,13 @@ export function Layout() {
                         </DropdownMenuItem>
                       </>
                     )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings" className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive">
                       <LogOut className="h-4 w-4" />

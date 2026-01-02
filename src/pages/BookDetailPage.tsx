@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,6 @@ import {
   Trash2, 
   Edit, 
   X,
-  Star,
   BookMarked,
   Clock,
   Check,
@@ -50,6 +49,7 @@ import {
 } from 'lucide-react';
 import type { LibraryStatus, ReviewWithUser, RatingBreakdown } from '../types';
 import { useAuth } from '@/hooks/use-auth';
+import { useTitle } from '@/hooks/use-title';
 
 const statusConfig = {
   want_to_read: { label: 'Want to Read', icon: BookMarked, color: 'bg-emerald-600 hover:bg-emerald-700' },
@@ -59,6 +59,8 @@ const statusConfig = {
 
 export function BookDetailPage() {
   const { '*': workKeyPath } = useParams();
+  const [searchParams] = useSearchParams();
+  const isbn = searchParams.get('isbn') || undefined;
   const workKey = workKeyPath || '';
   const { isAuthenticated, user } = useAuth();
   const queryClient = useQueryClient();
@@ -71,9 +73,11 @@ export function BookDetailPage() {
   const [revealedSpoilers, setRevealedSpoilers] = useState<Set<string>>(new Set());
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['book', workKey],
-    queryFn: () => api.getBookDetails(workKey),
+    queryKey: ['book', workKey, isbn],
+    queryFn: () => api.getBookDetails(workKey, isbn),
   });
+
+  useTitle(data?.data?.book?.title);
 
   const addToLibraryMutation = useMutation({
     mutationFn: (status: LibraryStatus) =>
@@ -86,6 +90,7 @@ export function BookDetailPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', workKey] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
     },
   });
 
@@ -94,6 +99,7 @@ export function BookDetailPage() {
       api.updateLibraryItem(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', workKey] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
     },
   });
 
@@ -101,6 +107,7 @@ export function BookDetailPage() {
     mutationFn: (id: string) => api.removeFromLibrary(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', workKey] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
     },
   });
 
@@ -341,6 +348,7 @@ export function BookDetailPage() {
           {isAuthenticated && !userReview && (
             <div className="mt-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">Rate this book</p>
+              <div className='flex items-center justify-center'>
               <StarRating
                 rating={0}
                 size="lg"
@@ -351,6 +359,7 @@ export function BookDetailPage() {
                   document.getElementById('write-review')?.scrollIntoView({ behavior: 'smooth' });
                 }}
               />
+              </div>
             </div>
           )}
         </div>
@@ -501,8 +510,7 @@ export function BookDetailPage() {
       <div className="mt-12">
         <Separator className="mb-8" />
         
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
+        <h2 className="text-2xl font-bold mb-6">
           Ratings & Reviews
         </h2>
 
@@ -625,8 +633,7 @@ export function BookDetailPage() {
         {isAuthenticated && (!userReview || isEditing) && (
           <Card id="write-review" className="mb-8 border-primary/30">
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
+              <h3 className="text-lg font-semibold mb-4">
                 {userReview ? 'Edit Your Review' : 'Write a Review'}
               </h3>
               
